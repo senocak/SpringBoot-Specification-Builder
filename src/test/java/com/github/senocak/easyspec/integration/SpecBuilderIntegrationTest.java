@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.TestPropertySource;
 import java.util.List;
@@ -34,15 +35,15 @@ class SpecBuilderIntegrationTest {
         userRepository.deleteAll();
 
         // Create cities
-        City newYork = new City("New York", "USA");
-        City london = new City("London", "UK");
-        City paris = new City("Paris", "France");
+        final City newYork = new City("New York", "USA");
+        final City london = new City("London", "UK");
+        final City paris = new City("Paris", "France");
 
         // Create addresses
-        Address address1 = new Address("123 Main St", newYork);
-        Address address2 = new Address("456 Oak Ave", london);
-        Address address3 = new Address("789 Elm St", paris);
-        Address address4 = new Address("321 Pine Rd", newYork);
+        final Address address1 = new Address("123 Main St", newYork);
+        final Address address2 = new Address("456 Oak Ave", london);
+        final Address address3 = new Address("789 Elm St", paris);
+        final Address address4 = new Address("321 Pine Rd", newYork);
 
         // Create users
         user1 = new User("john.doe@example.com", "John Doe", 25, User.UserStatus.ACTIVE);
@@ -68,7 +69,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertEquals("John Doe", users.get(0).getName());
+        assertEquals("John Doe", users.getFirst().getName());
     }
 
     @Test
@@ -133,7 +134,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertTrue(users.get(0).getName().contains("John"));
+        assertTrue(users.getFirst().getName().contains("John"));
     }
 
     @Test
@@ -144,7 +145,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertTrue(users.get(0).getEmail().startsWith("john"));
+        assertTrue(users.getFirst().getEmail().startsWith("john"));
     }
 
     @Test
@@ -192,7 +193,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertNull(users.get(0).getAddress());
+        assertNull(users.getFirst().getAddress());
     }
 
     @Test
@@ -244,7 +245,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertEquals("Jane Smith", users.get(0).getName());
+        assertEquals("Jane Smith", users.getFirst().getName());
     }
 
     @Test
@@ -257,7 +258,7 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(1, users.size());
-        assertEquals("John Doe", users.get(0).getName());
+        assertEquals("John Doe", users.getFirst().getName());
     }
 
     @Test
@@ -334,5 +335,49 @@ class SpecBuilderIntegrationTest {
 
         List<User> users = userRepository.findAll(spec);
         assertEquals(4, users.size());  // All users returned
+    }
+
+    @Test
+    void givenSpecificationWithOrderAsc_whenFindAll_thenOrderedCorrectly() {
+        // Given
+        final Specification<User> spec = SpecBuilder.forClass(User.class)
+            .orderBy("email", Sort.Direction.ASC)
+            .build();
+        // When
+        final List<User> users = userRepository.findAll(spec);
+        // Then
+        assertEquals(4, users.size());
+        assertEquals(user4.getEmail(), users.getFirst().getEmail());
+        assertEquals(user3.getEmail(), users.get(1).getEmail());
+        assertEquals(user2.getEmail(), users.get(2).getEmail());
+        assertEquals(user1.getEmail(), users.get(3).getEmail());
+    }
+
+    @Test
+    void givenSpecificationWithOrderDescAndDefault_whenFindAll_thenOrderedCorrectly() {
+        // Given
+        final Specification<User> spec = SpecBuilder.forClass(User.class)
+            .orderBy("email", Sort.Direction.DESC)
+            .build();
+        // When
+        final List<User> users = userRepository.findAll(spec);
+        // Then
+        assertEquals(4, users.size());
+        assertEquals(user1.getEmail(), users.getFirst().getEmail());
+        assertEquals(user2.getEmail(), users.get(1).getEmail());
+        assertEquals(user3.getEmail(), users.get(2).getEmail());
+        assertEquals(user4.getEmail(), users.get(3).getEmail());
+        // Given
+        final Specification<User> specDefault = SpecBuilder.forClass(User.class)
+            .orderBy("email")
+            .build();
+        // When
+        final List<User> usersDefault = userRepository.findAll(specDefault);
+        // Then
+        assertEquals(4, usersDefault.size());
+        assertEquals(user1.getEmail(), usersDefault.getFirst().getEmail());
+        assertEquals(user2.getEmail(), usersDefault.get(1).getEmail());
+        assertEquals(user3.getEmail(), usersDefault.get(2).getEmail());
+        assertEquals(user4.getEmail(), usersDefault.get(3).getEmail());
     }
 }

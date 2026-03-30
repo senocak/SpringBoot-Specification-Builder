@@ -69,6 +69,11 @@ public enum Operator {
     /**
      * IS NOT NULL operator
      */
-    IS_NOT_NULL
+    IS_NOT_NULL,
+
+    /**
+     * ORDER BY operator for sorting results
+     */
+    ORDER_BY
 }
 

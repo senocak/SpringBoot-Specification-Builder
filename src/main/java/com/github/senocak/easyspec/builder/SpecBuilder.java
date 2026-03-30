@@ -1,11 +1,13 @@
 package com.github.senocak.easyspec.builder;
 
-import com.github.senocak.easyspec.util.PathUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -32,8 +34,8 @@ import java.util.List;
  * @param <T> the entity type
  * @author Spring Boot Easy Specification
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class SpecBuilder<T> {
-
     private final Class<T> entityClass;
     private final List<Condition> conditions;
 
@@ -42,7 +44,7 @@ public class SpecBuilder<T> {
      *
      * @param entityClass the entity class
      */
-    private SpecBuilder(Class<T> entityClass) {
+    private SpecBuilder(final Class<T> entityClass) {
         this.entityClass = entityClass;
         this.conditions = new ArrayList<>();
     }
@@ -54,7 +56,7 @@ public class SpecBuilder<T> {
      * @param <T> the entity type
      * @return a new SpecBuilder instance
      */
-    public static <T> SpecBuilder<T> forClass(Class<T> entityClass) {
+    public static <T> SpecBuilder<T> forClass(final Class<T> entityClass) {
         return new SpecBuilder<>(entityClass);
     }
 
@@ -65,7 +67,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> eq(String field, Object value) {
+    public SpecBuilder<T> eq(final String field, final Object value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.EQUAL, value));
         }
@@ -79,7 +81,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> ne(String field, Object value) {
+    public SpecBuilder<T> ne(final String field, final Object value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.NOT_EQUAL, value));
         }
@@ -93,7 +95,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> greaterThan(String field, Comparable<?> value) {
+    public SpecBuilder<T> greaterThan(final String field, final Comparable<?> value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.GREATER_THAN, value));
         }
@@ -107,7 +109,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> lessThan(String field, Comparable<?> value) {
+    public SpecBuilder<T> lessThan(final String field, final Comparable<?> value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.LESS_THAN, value));
         }
@@ -121,7 +123,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> gte(String field, Comparable<?> value) {
+    public SpecBuilder<T> gte(final String field, final Comparable<?> value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.GREATER_THAN_OR_EQUAL, value));
         }
@@ -135,7 +137,7 @@ public class SpecBuilder<T> {
      * @param value the value to compare
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> lte(String field, Comparable<?> value) {
+    public SpecBuilder<T> lte(final String field, final Comparable<?> value) {
         if (value != null) {
             conditions.add(new Condition(field, Operator.LESS_THAN_OR_EQUAL, value));
         }
@@ -149,7 +151,7 @@ public class SpecBuilder<T> {
      * @param value the value to search for
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> contains(String field, String value) {
+    public SpecBuilder<T> contains(final String field, final String value) {
         if (value != null && !value.trim().isEmpty()) {
             conditions.add(new Condition(field, Operator.CONTAINS, value));
         }
@@ -163,7 +165,7 @@ public class SpecBuilder<T> {
      * @param value the value to search for
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> startsWith(String field, String value) {
+    public SpecBuilder<T> startsWith(final String field, final String value) {
         if (value != null && !value.trim().isEmpty()) {
             conditions.add(new Condition(field, Operator.STARTS_WITH, value));
         }
@@ -177,7 +179,7 @@ public class SpecBuilder<T> {
      * @param value the value to search for
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> endsWith(String field, String value) {
+    public SpecBuilder<T> endsWith(final String field, final String value) {
         if (value != null && !value.trim().isEmpty()) {
             conditions.add(new Condition(field, Operator.ENDS_WITH, value));
         }
@@ -191,7 +193,7 @@ public class SpecBuilder<T> {
      * @param values the collection of values
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> in(String field, Collection<?> values) {
+    public SpecBuilder<T> in(final String field, final Collection<?> values) {
         if (values != null && !values.isEmpty()) {
             conditions.add(new Condition(field, Operator.IN, values.toArray()));
         }
@@ -206,7 +208,7 @@ public class SpecBuilder<T> {
      * @param end the end value (inclusive)
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> between(String field, Comparable<?> start, Comparable<?> end) {
+    public SpecBuilder<T> between(final String field, final Comparable<?> start, Comparable<?> end) {
         if (start != null && end != null) {
             conditions.add(new Condition(field, Operator.BETWEEN, start, end));
         }
@@ -219,7 +221,7 @@ public class SpecBuilder<T> {
      * @param field the field path
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> isNull(String field) {
+    public SpecBuilder<T> isNull(final String field) {
         conditions.add(new Condition(field, Operator.IS_NULL));
         return this;
     }
@@ -230,8 +232,30 @@ public class SpecBuilder<T> {
      * @param field the field path
      * @return this builder for method chaining
      */
-    public SpecBuilder<T> isNotNull(String field) {
+    public SpecBuilder<T> isNotNull(final String field) {
         conditions.add(new Condition(field, Operator.IS_NOT_NULL));
+        return this;
+    }
+
+    /**
+     * Adds an ORDER BY condition (field DESC)
+     * Note: This will only affect non-count queries. For count queries, it will be ignored.
+     * @param field the field path
+     * @return this builder for method chaining
+     */
+    public SpecBuilder<T> orderBy(final String field) {
+        return orderBy(field, null);
+    }
+
+    /**
+     * Adds an ORDER BY condition with specified direction (field ASC or DESC).
+     * Note: This will only affect non-count queries. For count queries, it will be ignored.
+     *
+     * @param field the field path
+     * @return this builder for method chaining
+     */
+    public SpecBuilder<T> orderBy(final String field, final Sort.Direction orderBy) {
+        conditions.add(new Condition(field, Operator.ORDER_BY, orderBy));
         return this;
     }
 
@@ -242,23 +266,19 @@ public class SpecBuilder<T> {
      */
     public Specification<T> build() {
         if (conditions.isEmpty()) {
-            return Specification.where(null);
+            return Specification.unrestricted();
         }
-
         return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
+            final List<Predicate> predicates = new ArrayList<>();
             for (Condition condition : conditions) {
                 Predicate predicate = buildPredicate(root, query, criteriaBuilder, condition);
                 if (predicate != null) {
                     predicates.add(predicate);
                 }
             }
-
             if (predicates.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -272,12 +292,11 @@ public class SpecBuilder<T> {
      * @param condition the condition to build
      * @return the predicate
      */
-    @SuppressWarnings("unchecked")
-    private Predicate buildPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb, Condition condition) {
-        Path<?> path = PathUtils.resolvePath(root, condition.getField());
-        Operator operator = condition.getOperator();
-        Object[] values = condition.getValues();
-
+    private Predicate buildPredicate(final Root<T> root, final CriteriaQuery<?> query, final CriteriaBuilder cb,
+                                     final Condition condition) {
+        final Path<?> path = resolvePath(root, condition.getField(), JoinType.LEFT);
+        final Operator operator = condition.getOperator();
+        final Object[] values = condition.getValues();
         return switch (operator) {
             case EQUAL -> cb.equal(path, values[0]);
             case NOT_EQUAL -> cb.notEqual(path, values[0]);
@@ -289,7 +308,7 @@ public class SpecBuilder<T> {
             case STARTS_WITH -> cb.like(cb.lower((Path<String>) path), values[0].toString().toLowerCase() + "%");
             case ENDS_WITH -> cb.like(cb.lower((Path<String>) path), "%" + values[0].toString().toLowerCase());
             case IN -> {
-                jakarta.persistence.criteria.CriteriaBuilder.In<Object> inClause = cb.in(path);
+                CriteriaBuilder.In<Object> inClause = cb.in(path);
                 for (Object value : values) {
                     inClause.value(value);
                 }
@@ -298,7 +317,53 @@ public class SpecBuilder<T> {
             case BETWEEN -> cb.between((Path<Comparable>) path, (Comparable) values[0], (Comparable) values[1]);
             case IS_NULL -> cb.isNull(path);
             case IS_NOT_NULL -> cb.isNotNull(path);
+            case ORDER_BY -> {
+                boolean isNotCountQuery = query != null && !Long.class.equals(query.getResultType());
+                // For non-count queries, add ordering
+                if (isNotCountQuery) {
+                    if (values != null && values.length >= 1 && values[0] instanceof Sort.Direction orderBy) {
+                        if (orderBy == Sort.Direction.ASC) {
+                            query.orderBy(cb.asc(root.get(condition.getField())));
+                        } else {
+                            query.orderBy(cb.desc(root.get(condition.getField())));
+                        }
+                    } else {
+                        query.orderBy(cb.desc(root.get(condition.getField())));
+                    }
+                }
+                yield cb.conjunction();
+            }
         };
+    }
+
+    /**
+     * Resolves a field path with explicit join type.
+     *
+     * @param root the root entity
+     * @param fieldPath the field path
+     * @param joinType the join type to use for nested paths
+     * @param <T> the root entity type
+     * @return the resolved Path
+     */
+    private <T> Path<?> resolvePath(Root<T> root, String fieldPath, JoinType joinType) {
+        if (fieldPath == null || fieldPath.trim().isEmpty()) {
+            throw new IllegalArgumentException("Field path cannot be null or empty");
+        }
+        final String[] parts = fieldPath.split("\\.");
+        if (parts.length == 1) {
+            return root.get(parts[0]);
+        }
+        // Start from root and navigate through the path
+        // Use From<?, ?> to track the current join point (Root and Join both extend From)
+        From<?, ?> currentFrom = root;
+        // Process all parts except the last one (these require joins)
+        for (int i = 0; i < parts.length - 1; i++) {
+            // Create a join from the current From (Root or Join)
+            // The JPA Criteria API will handle duplicate joins automatically
+            currentFrom = currentFrom.join(parts[i], joinType);
+        }
+        // Get the final field from the last path segment
+        return currentFrom.get(parts[parts.length - 1]);
     }
 }
 
