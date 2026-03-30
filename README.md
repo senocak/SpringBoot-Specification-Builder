@@ -34,14 +34,14 @@ Specification<User> spec = SpecBuilder.forClass(User.class)
 <dependency>
     <groupId>com.example</groupId>
     <artifactId>spring-boot-easy-specification</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'com.example:spring-boot-easy-specification:1.0.0'
+implementation 'com.example:spring-boot-easy-specification:1.0.1'
 ```
 
 ## 🚀 Quick Start
