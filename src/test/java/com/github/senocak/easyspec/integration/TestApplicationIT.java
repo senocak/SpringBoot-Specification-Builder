@@ -49,9 +49,9 @@ class TestApplicationIT {
         userRepository.deleteAll();
 
         // Create cities
-        final City newYork = new City("New York", "USA");
+        final City newYork = new City("New York", null);
         final City london = new City("London", "UK");
-        final City paris = new City("Paris", null);
+        final City paris = new City("Paris", "France");
 
         // Create addresses
         final Address address1 = new Address("123 Main St", newYork);
@@ -297,7 +297,7 @@ class TestApplicationIT {
         // Given
         final FilterDto filterDto1 = new FilterDto("address.city.country", Operator.IS_NULL);
         final SearchRequest request = new SearchRequest("com.github.senocak.easyspec.integration.entity.User",
-            List.of(filterDto1));
+            List.of(filterDto1, filterOrderNameAsc));
         // When
         final ResponseEntity<User[]> response = restTemplate.postForEntity("/search",
             new HttpEntity<>(request), User[].class);
@@ -307,8 +307,9 @@ class TestApplicationIT {
         assertNotNull(body);
         final List<User> users = Arrays.asList(body);
         assertNotNull(users);
-        assertEquals(1, users.size());
-        assertEquals("bob.jones@example.com", users.getFirst().getEmail());
+        assertEquals(2, users.size());
+        assertEquals("alice.brown@example.com", users.getFirst().getEmail());
+        assertEquals("john.doe@example.com", users.get(1).getEmail());
     }
 
     @Test
@@ -326,10 +327,9 @@ class TestApplicationIT {
         assertNotNull(body);
         final List<User> users = Arrays.asList(body);
         assertNotNull(users);
-        assertEquals(3, users.size());
-        assertEquals("alice.brown@example.com", users.getFirst().getEmail());
+        assertEquals(2, users.size());
+        assertEquals("bob.jones@example.com", users.getFirst().getEmail());
         assertEquals("jane.smith@example.com", users.get(1).getEmail());
-        assertEquals("john.doe@example.com", users.get(2).getEmail());
     }
 
     @Test
